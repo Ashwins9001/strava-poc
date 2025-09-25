@@ -1,31 +1,73 @@
-version: '3.7'
+version: "3.8"
 
 services:
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: airflow
     volumes:
       - postgres_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      retries: 5
 
-  airflow:
-    image: puckel/docker-airflow:1.10.9
-    restart: always
+  airflow-webserver:
+    image: apache/airflow:2.7.1      
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+      AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_WEBSERVER__SECRET_KEY}
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+      AIRFLOW__WEBSERVER__WORKERS: 2
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
     volumes:
-      - ./dags:/usr/local/airflow/dags
+      - ./dags:/opt/airflow/dags
       - ./requirements.txt:/requirements.txt
-    command: >
-      bash -c "pip install -r /requirements.txt && airflow initdb && airflow webserver & airflow scheduler"
     ports:
       - "8080:8080"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install -r /requirements.txt && \
+        airflow db upgrade && \
+        airflow users create \
+          --username "$AIRFLOW_ADMIN_USER" \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email "$AIRFLOW_ADMIN_EMAIL" \
+          --password "$AIRFLOW_ADMIN_PASSWORD" || true && \
+        airflow users list && \
+        exec airflow webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./requirements.txt:/requirements.txt
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install --user -r /requirements.txt && \
+        exec airflow scheduler
 
 volumes:
   postgres_db:
