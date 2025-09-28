@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 import urllib.parse
 import polyline
 
-import map_functions
+from . import map_functions
 
 load_dotenv()
+
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -18,6 +20,7 @@ SCOPE = os.getenv("SCOPE")
 AUTH_CODE=os.getenv("AUTHENTICATION_CODE")
 
 def authenticate_to_read_all_scope():
+    print('here')
 
     params = {
         'client_id': CLIENT_ID,
@@ -31,8 +34,8 @@ def authenticate_to_read_all_scope():
     print("Go to this URL in your browser to authorize the app:")
     print(url)
 
-def refresh_strava_token():
-    print("Refreshing token...")
+def get_refresh_token():
+    print("Getting refresh token given authorization code...")
     response = requests.post("https://www.strava.com/api/v3/oauth/token", data={
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET,
@@ -47,15 +50,36 @@ def refresh_strava_token():
         expires_at = new_tokens['expires_at']
 
         update_env_file(access_token, refresh_token, expires_at)
+
+        return access_token
+    else:
+        raise Exception("Failed to refresh token: " + response.text)
+
+def update_refresh_token():
+    print("Refreshing access token...")
+    response = requests.post("https://www.strava.com/api/v3/oauth/token", data={
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'refresh_token',
+        'refresh_token': REFRESH_TOKEN
+    })
+    
+    if response.status_code == 200:
+        new_tokens = response.json()
+        access_token = new_tokens['access_token']
+        refresh_token = new_tokens['refresh_token']
+        expires_at = new_tokens['expires_at']
+
+        update_env_file(access_token, refresh_token, expires_at)
         return access_token
     else:
         raise Exception("Failed to refresh token: " + response.text)
 
 def update_env_file(access_token, refresh_token, expires_at):
-    with open('.env', 'r') as file:
+    with open(env_path, 'r') as file:
         lines = file.readlines()
 
-    with open('.env', 'w') as file:
+    with open(env_path, 'w') as file:
         for line in lines:
             if line.startswith("ACCESS_TOKEN="):
                 file.write(f"ACCESS_TOKEN={access_token}\n")
@@ -68,7 +92,7 @@ def update_env_file(access_token, refresh_token, expires_at):
 
 def get_valid_token():
     if time.time() > EXPIRES_AT:
-        return refresh_strava_token()
+        return update_refresh_token()
     return ACCESS_TOKEN
 
 def get_athlete_information(access_token):
@@ -110,11 +134,11 @@ def initialize_responses():
     show_activities_on_map(activities_response)
 
 
-
 def show_activities_on_map(activities):
     coordinates = []
     for activity in activities:
         coordinates = coordinates + polyline.decode(activity['map']['summary_polyline'])
     map_functions.generate_map(coordinates, threshold_km=8)
 
-initialize_responses()
+def main():
+    initialize_responses()

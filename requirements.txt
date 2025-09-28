@@ -1,6 +1,5 @@
 pyspark==3.4.1
-python-dotenv
-requests
-time
-os
-polyline
+python-dotenv==1.0.1
+requests==2.31.0
+polyline==2.0.3
+flask

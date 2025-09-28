@@ -15,15 +15,20 @@ services:
       retries: 5
 
   airflow-webserver:
+    hostname: airflow-webserver
     image: apache/airflow:2.7.1      
     depends_on:
       postgres:
         condition: service_healthy
     environment:
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      AIRFLOW__LOGGING__REMOTE_LOGGING: "False"
+      AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
       AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL}
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_WEBSERVER__SECRET_KEY}
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
@@ -31,6 +36,7 @@ services:
       AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
       - ./requirements.txt:/requirements.txt
     ports:
       - "8080:8080"
@@ -51,16 +57,28 @@ services:
         exec airflow webserver
 
   airflow-scheduler:
+    hostname: airflow-scheduler
     image: apache/airflow:2.7.1
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__LOGGING__REMOTE_LOGGING: "False"
+      AIRFLOW__WEBSERVER__BASE_URL: "http://localhost:8080"
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      ACCESS_TOKEN: ${ACCESS_TOKEN}
+      REFRESH_TOKEN: ${REFRESH_TOKEN}
+      EXPIRES_AT: ${EXPIRES_AT}
+      SCOPE: ${SCOPE}
+      AUTHENTICATION_CODE: ${AUTHENTICATION_CODE}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
       - ./requirements.txt:/requirements.txt
     entrypoint: /bin/bash
     command:
