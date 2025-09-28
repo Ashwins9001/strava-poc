@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime
 from pyspark.sql import SparkSession
-from helpers.strava_api import main
+from helpers.strava_callable import main
 
 with DAG(
     dag_id='strava_wrapped',

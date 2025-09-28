@@ -131,6 +131,7 @@ def initialize_responses():
     athlete_id, athlete_name = get_athlete_information(token)
     stats_response = get_activity_stats(token, athlete_id, athlete_name)
     activities_response = get_activities(token)
+    print("Athlete activities as listed: {0}".format(activities_response))
     show_activities_on_map(activities_response)
 
 
