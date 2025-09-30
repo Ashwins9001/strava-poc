@@ -6,9 +6,11 @@ from pyspark.sql import SparkSession
 from helpers.strava_callable import initialize_responses
 import os
 import json
+from langchain.llms import OpenAI
+from airflow.models import Variable
+
 
 def fetch_strava_data(**kwargs):
-    from airflow.models import Variable
     ti = kwargs['ti']  # This is the TaskInstance
 
     activities = initialize_responses()
@@ -22,6 +24,18 @@ def fetch_strava_data(**kwargs):
         json.dump(activities, f)
 
     ti.xcom_push(key="activities_path", value=output_path)
+
+
+
+def push_stats_to_xcom(**kwargs):
+    ti = kwargs['ti']
+
+    with open("/opt/airflow/data/aggregated_activities.json") as f:
+        stats = json.load(f)
+
+    ti.xcom_push(key="runs", value=stats["runs"])
+    ti.xcom_push(key="rides", value=stats["rides"])
+
 
 with DAG(
     dag_id='strava_wrapped',
@@ -43,5 +57,10 @@ with DAG(
         """
     )
 
-    fetch_activities >> spark_task
+    push_stats_task = PythonOperator(
+        task_id="push_stats_xcom",
+        python_callable=push_stats_to_xcom,
+    )
+
+    fetch_activities >> spark_task >> push_stats_task
 
