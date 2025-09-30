@@ -8,7 +8,7 @@ Just a simple project to fetch data from Strava and show some analytics on it us
 - Docker (building images easily)
 - PySpark (quickly creating aggregations)
 - Strava API (fetching athlete activity data)
-- LangChain (calling Dall-E 3 to generate "Strava Wrapped" response)
+- OpenAI API (calling Dall-E 3 to generate "Strava Wrapped" response)
 
 ![AirFlow Preview](images/airflow-job.png)
 
@@ -16,7 +16,7 @@ Just a simple project to fetch data from Strava and show some analytics on it us
 A lot time was spent debugging the Docker set-up, building the correct image given the Java, PySpark, AirFlow and LangChain dependencies, and learning how to configure an AirFlow environment. Application development side which includes querying the APIs and using PySpark was fairly straightforward.
 
 ### Technical Overview
-Code makes use of Docker to get an AirFlow runtime going easily. Airflow chosen as the orchestration engine. The application spins up the AirFlow scheduler and webserver, then calls the Strava API to fetch athlete activity information and also print out athlete routes onto a map which is stored as an HTML file. That gets passed via Xcoms to the PySpark job to create aggregate statistics, and then again via XComs to LangChain where it is then provided to an OpenAI agent to pass the query string to Dall-E 3 to generate the Strava wrapped response. 
+Code makes use of Docker to get an AirFlow runtime going easily. Airflow chosen as the orchestration engine. The application spins up the AirFlow scheduler and webserver, then calls the Strava API to fetch athlete activity information and also print out athlete routes onto a map which is stored as an HTML file. That gets passed via Xcoms to the PySpark job to create aggregate statistics, and then again via XComs to LangChain where it is then provided to an OpenAI API to pass the query string to Dall-E 3 to generate the Strava wrapped response. 
 
 A custom Docker image gets used because Java needs to be installed and its environment variables set, hence that gets done inside the file.
 
