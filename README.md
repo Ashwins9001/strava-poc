@@ -7,7 +7,7 @@ Just a simple project to fetch data from Strava and show some analytics on it us
 - AirFlow (orchestration, scheduling, param passing via Xcoms)
 - Docker (building images easily)
 - PySpark (quickly creating aggregations)
-- Strava API (fetching athlete activity data)
+- Strava API (fetching athlete activity data via O-Auth 2.0 authentication)
 - OpenAI API (calling Dall-E 3 to generate "Strava Wrapped" response)
 
 ![AirFlow Preview](images/airflow-job.png)
