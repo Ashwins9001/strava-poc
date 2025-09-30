@@ -16,7 +16,7 @@ services:
 
   airflow-webserver:
     hostname: airflow-webserver
-    image: apache/airflow:2.7.1      
+    image: my-airflow:2.7.1-java      
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,6 +38,8 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./requirements.txt:/requirements.txt
+      - ./.env:/opt/airflow/.env
+      - ./data:/opt/airflow/data
     ports:
       - "8080:8080"
     entrypoint: /bin/bash
@@ -58,7 +60,7 @@ services:
 
   airflow-scheduler:
     hostname: airflow-scheduler
-    image: apache/airflow:2.7.1
+    image: my-airflow:2.7.1-java
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +82,8 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./requirements.txt:/requirements.txt
+      - ./.env:/opt/airflow/.env
+      - ./data:/opt/airflow/data
     entrypoint: /bin/bash
     command:
       - -c

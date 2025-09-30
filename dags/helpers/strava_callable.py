@@ -133,6 +133,7 @@ def initialize_responses():
     activities_response = get_activities(token)
     print("Athlete activities as listed: {0}".format(activities_response))
     show_activities_on_map(activities_response)
+    return activities_response
 
 
 def show_activities_on_map(activities):
@@ -140,6 +141,3 @@ def show_activities_on_map(activities):
     for activity in activities:
         coordinates = coordinates + polyline.decode(activity['map']['summary_polyline'])
     map_functions.generate_map(coordinates, threshold_km=8)
-
-def main():
-    initialize_responses()
