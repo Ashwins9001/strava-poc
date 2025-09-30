@@ -77,6 +77,7 @@ services:
       SCOPE: ${SCOPE}
       AUTHENTICATION_CODE: ${AUTHENTICATION_CODE}
       AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
+      OPEN_API_KEY: ${OPEN_API_KEY}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs

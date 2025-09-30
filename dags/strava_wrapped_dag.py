@@ -8,6 +8,7 @@ import os
 import json
 from langchain.llms import OpenAI
 from airflow.models import Variable
+from helpers.langchain_connect import run_langchain
 
 
 def fetch_strava_data(**kwargs):
@@ -24,8 +25,6 @@ def fetch_strava_data(**kwargs):
         json.dump(activities, f)
 
     ti.xcom_push(key="activities_path", value=output_path)
-
-
 
 def push_stats_to_xcom(**kwargs):
     ti = kwargs['ti']
@@ -62,5 +61,10 @@ with DAG(
         python_callable=push_stats_to_xcom,
     )
 
-    fetch_activities >> spark_task >> push_stats_task
+    langchain_dall_e_task = PythonOperator(
+        task_id="langchain",
+        python_callable=run_langchain,
+    )
+
+    fetch_activities >> spark_task >> push_stats_task >> langchain_dall_e_task
 
