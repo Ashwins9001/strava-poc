@@ -10,6 +10,8 @@ Just a simple project to fetch data from Strava and show some analytics on it us
 - Strava API (fetching athlete activity data)
 - LangChain (calling Dall-E 3 to generate "Strava Wrapped" response)
 
+![AirFlow Preview](images/airflow-job.png)
+
 ### Some Notes
 A lot time was spent debugging the Docker set-up, building the correct image given the Java, PySpark, AirFlow and LangChain dependencies, and learning how to configure an AirFlow environment. Application development side which includes querying the APIs and using PySpark was fairly straightforward.
 
